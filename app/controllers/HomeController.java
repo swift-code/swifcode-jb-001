@@ -3,6 +3,7 @@ package controllers;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.ObjectNode;
+import models.ConnectionRequest;
 import models.Profile;
 import models.User;
 import play.data.validation.ValidationError;
@@ -25,9 +26,12 @@ public class HomeController extends Controller {
 
   public Result getProfile(Long id){
       ObjectNode data=objectMapper.createObjectNode();
+      ObjectNode connectionData=objectMapper.createObjectNode();
       User user=User.find.byId(id);
       Profile profile=user.profile.find.byId(id);
 
+
+      //first lambda
       data.put("id",profile.id );
       data.put("firstName",profile.firstName );
       data.put("lastName",profile.lastName );
@@ -44,9 +48,71 @@ public class HomeController extends Controller {
           connectionJson.put("company",connectionProfile.company );
           return connectionJson;
       }).collect(Collectors.toList())));
-      return ok();
 
+
+
+      //second lambda
+      data.set("connectionRequestReceived",objectMapper.valueToTree(user.conenctionRequestsReceived.stream().filter(x->x.status.equals(ConnectionRequest.Status.WAITING) ).map(connectionRequestReceived->{
+          ObjectNode connectionJson=objectMapper.createObjectNode();
+          Profile senderProfile=Profile.find.byId(connectionRequestReceived.sender.id);
+          connectionJson.put("id",connectionRequestReceived.id);
+          connectionJson.put("firstName",senderProfile.firstName );
+          connectionJson.put("lastName",senderProfile.lastName );
+          connectionJson.put("company",senderProfile.company );
+          return connectionJson;
+      }).collect(Collectors.toList())));
+
+      //second lambda
+      data.set("connectionRequestReceived",objectMapper.valueToTree(user.conenctionRequestsReceived.stream().filter(x->x.status.equals(ConnectionRequest.Status.WAITING) ).map(connectionRequestReceived->{
+          ObjectNode connectionJson=objectMapper.createObjectNode();
+          Profile senderProfile=Profile.find.byId(connectionRequestReceived.sender.id);
+          connectionJson.put("id",connectionRequestReceived.id);
+          connectionJson.put("firstName",senderProfile.firstName );
+          connectionJson.put("lastName",senderProfile.lastName );
+          connectionJson.put("company",senderProfile.company );
+          return connectionJson;
+      }).collect(Collectors.toList())));      //second lambda
+      data.set("suggestions",objectMapper.valueToTree(User.find.all().stream()
+              .filter(x->!user.equals(x)) //remove me
+              .filter(x->!user.connections.contains(x)) //remove friends
+              .filter(x->!user.conenctionRequestsReceived.stream().map(y->y.sender).collect(Collectors.toList()).contains(x)) //remove users who sent request to me
+              .filter(x->!user.connectionRequestsSent.stream().map(y->y.receiver).collect(Collectors.toList()).contains(x))
+              .map(suggestion -> {
+                  ObjectNode suggestionJson = objectMapper.createObjectNode();
+                  Profile suggestionProfile = Profile.find.byId(suggestion.profile.id);
+                  suggestionJson.put("id",suggestion.id);
+                  suggestionJson.put("firstName",suggestionProfile.firstName);
+                  suggestionJson.put("lastName",suggestionProfile.lastName);
+                  return suggestionJson;
+              })
+              .collect(Collectors.toList())));
+      return ok(data);
+
+      /*
+      {
+        "email" : "",
+        "suggestions" : [
+            {
+                "id" : "",
+                "firstName" : "",
+                ..
+            },
+            {
+                ...
+            }
+        ],
+        "connections" : [
+            {
+
+            },
+            {
+
+            }
+        ]
+      }
+      */
   }
+
 }
 
 
