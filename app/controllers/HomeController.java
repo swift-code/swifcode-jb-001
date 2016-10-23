@@ -31,12 +31,13 @@ public class HomeController extends Controller {
       Profile profile=user.profile.find.byId(id);
 
 
-      //first lambda
+
       data.put("id",profile.id );
       data.put("firstName",profile.firstName );
       data.put("lastName",profile.lastName );
       data.put("email",user.email);
       data.put("company",profile.company );
+      //friend List
       data.set("connections",objectMapper.valueToTree(user.connections.stream().map(connection->{
           ObjectNode connectionJson=objectMapper.createObjectNode();
           User connectionUser=User.find.byId(connection.id);
@@ -51,7 +52,7 @@ public class HomeController extends Controller {
 
 
 
-      //second lambda
+      //requests pending
       data.set("connectionRequestReceived",objectMapper.valueToTree(user.conenctionRequestsReceived.stream().filter(x->x.status.equals(ConnectionRequest.Status.WAITING) ).map(connectionRequestReceived->{
           ObjectNode connectionJson=objectMapper.createObjectNode();
           Profile senderProfile=Profile.find.byId(connectionRequestReceived.sender.id);
@@ -62,16 +63,7 @@ public class HomeController extends Controller {
           return connectionJson;
       }).collect(Collectors.toList())));
 
-      //second lambda
-      data.set("connectionRequestReceived",objectMapper.valueToTree(user.conenctionRequestsReceived.stream().filter(x->x.status.equals(ConnectionRequest.Status.WAITING) ).map(connectionRequestReceived->{
-          ObjectNode connectionJson=objectMapper.createObjectNode();
-          Profile senderProfile=Profile.find.byId(connectionRequestReceived.sender.id);
-          connectionJson.put("id",connectionRequestReceived.id);
-          connectionJson.put("firstName",senderProfile.firstName );
-          connectionJson.put("lastName",senderProfile.lastName );
-          connectionJson.put("company",senderProfile.company );
-          return connectionJson;
-      }).collect(Collectors.toList())));      //second lambda
+      //suggestions
       data.set("suggestions",objectMapper.valueToTree(User.find.all().stream()
               .filter(x->!user.equals(x)) //remove me
               .filter(x->!user.connections.contains(x)) //remove friends

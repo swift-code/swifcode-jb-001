@@ -3,6 +3,9 @@
 # ~~~~
 
 # Map static resources from the /public folder to the /assets URL path
-GET     /assets/*file               controllers.Assets.versioned(path="/public", file: Asset)
-POST    /user/signup                controllers.Application.signup()
-POST    /user/login                 controllers.Application.login()
+GET     /assets/*file                       controllers.Assets.versioned(path="/public", file: Asset)
+GET     /profile:id                         controllers.HomeController.getProfile(id: Long)
+POST    /user/signup                        controllers.Application.signup()
+POST    /user/login                         controllers.Application.login()
+POST    /request/send/:senderId/:receiverId controllers.ConnectionController.sendRequest(senderId: Long,receiverId: Long)
+POST    /request/accept/:requestId          controllers.ConnectionController.acceptRequest(requestId: Long)
